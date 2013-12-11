@@ -30,7 +30,8 @@ main = hspec $ do
 
   describe "rowState should" $ do
     it "turn the correct number of lights on and decrement the time correctly" $ do
-      (rowState (TimeOfDay 10 0 0) [hoursLight 5, hoursLight 5, hoursLight 5]) `shouldBe` ((TimeOfDay 0 0 0), [(Light Red 5 Hours True), (Light Red 5 Hours True), (Light Red 5 Hours False)])
+      (rowState (TimeOfDay 10 0 0) [hoursLight 5, hoursLight 5, hoursLight 5]) `shouldBe` ((TimeOfDay 0 0 0),
+                                                                                           [(Light Red 5 Hours True), (Light Red 5 Hours True), (Light Red 5 Hours False)])
     it "turn no lights on if lights represent more time than what is remaining" $ do
       (rowState (TimeOfDay 4 0 0) [hoursLight 5, hoursLight 5]) `shouldBe` ((TimeOfDay 4 0 0), [hoursLight 5, hoursLight 5])
 

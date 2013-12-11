@@ -1,5 +1,8 @@
 module BerlinUhr.Main
-(Color(..), Light(..),TimeUnit(..), parseTime, unlitBerlinUhr, hoursLight, lightState, rowState, berlinUhr, berlinUhrAsString, printBerlinUhr)
+(Color(..), Light(..),TimeUnit(..),
+ parseTime, unlitBerlinUhr, hoursLight,
+ lightState, rowState, berlinUhr,
+ berlinUhrAsString, printBerlinUhr)
 where
 
 import Data.Time.LocalTime
@@ -17,13 +20,13 @@ instance Show Light where
   show (Light _ _ _ False) = "O"
   show (Light Red _ _ _) = "R"
   show (Light Yellow _ _ _) = "Y"
-
+-- two helper functions to construct lights
 hoursLight :: Int -> Light
 hoursLight hours = Light Red hours Hours False
 
 minutesLight :: Color -> Int -> Light
 minutesLight clr minutes = Light clr minutes Minutes False
-
+-- lets represent the unlit Berlin Uhr as a List of List of Lights, where each List of Lights represents a row.
 unlitBerlinUhr :: [[Light]]
 unlitBerlinUhr = [firstRow, secondRow, thirdRow, fourthRow]
   where firstRow = map (\_ -> hoursLight 5) ([1..4] :: [Int])
@@ -42,7 +45,7 @@ timeParser = do
   _ <- char ':'
   seconds <- count 2 digit
   return $ makeTimeOfDayValid (read hour) (read minutes) (read seconds)  
-
+-- turns an individual light on or off and decrements remaining time to be represented
 lightState :: TimeOfDay -> Light -> (TimeOfDay, Light)
 lightState (TimeOfDay hh mm ss) (Light c t Hours _) = if (hh >= t)
                                                         then ((TimeOfDay (hh - t) mm ss), (Light c t Hours True))
@@ -50,21 +53,23 @@ lightState (TimeOfDay hh mm ss) (Light c t Hours _) = if (hh >= t)
 lightState (TimeOfDay hh mm ss) (Light c t Minutes _) = if (mm >= t)
                                                            then ((TimeOfDay hh (mm - t) ss), (Light c t Minutes True))
                                                            else ((TimeOfDay hh mm ss), (Light c t Minutes False))
-
+-- calculates the on/off status of a row of lights
 rowState :: TimeOfDay -> [Light] -> (TimeOfDay, [Light])
 rowState tme [] = (tme, [])
 rowState tme (x:xs) = let (timeLeft, firstLamp) = lightState tme x
                           (timeAfterAllLights, rest) = rowState timeLeft xs
                       in (timeAfterAllLights, firstLamp : rest)
-
+-- calculates the on/off status of all lights
 berlinUhr :: TimeOfDay -> [[Light]]
 berlinUhr timeOfDay = calcUhr timeOfDay unlitBerlinUhr
                       where calcUhr _ [] = []
                             calcUhr tme (x:xs) = let (remaining, row) = rowState tme x
                                                  in row : (calcUhr remaining xs)
-
+-- represents a TimeOfDay as a Berlin Uhr represented as a List of Strings, where each Row is an entry.
+-- Top light for even/odd seconds is a "special case", hence calculated differently
 berlinUhrAsString :: TimeOfDay -> [String]
-berlinUhrAsString tme = let topLight = if (((read (showFixed True (todSec tme)) :: Integer) `rem` 2) == 0) then "Y" else "O"
+berlinUhrAsString tme = let topLight = if (((read (showFixed True (todSec tme)) :: Integer) `rem` 2) == 0)
+                                       then "Y" else "O"
                             restOfTheLights =
                               do
                                 row <- berlinUhr tme
@@ -72,4 +77,6 @@ berlinUhrAsString tme = let topLight = if (((read (showFixed True (todSec tme)) 
                         in topLight : restOfTheLights
 
 printBerlinUhr :: String -> IO ()
-printBerlinUhr input = mapM_ putStrLn $ fromMaybe [input ++ " is not a valid Time!"] $ fmap berlinUhrAsString $ parseTime input
+printBerlinUhr input = mapM_ putStrLn $
+                       fromMaybe [input ++ " is not a valid Time!"] $
+                       fmap berlinUhrAsString $ parseTime input
