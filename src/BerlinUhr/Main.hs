@@ -2,7 +2,7 @@ module BerlinUhr.Main
 (Color(..), Light(..),TimeUnit(..),
  parseTime, unlitBerlinUhr, hoursLight,
  lightState, rowState, berlinUhr,
- berlinUhrAsString, printBerlinUhr)
+ berlinUhrAsString, printBerlinUhr, addLightToTime, addRowToTime, addUhrToTime)
 where
 
 import Data.Time.LocalTime
@@ -80,3 +80,15 @@ printBerlinUhr :: String -> IO ()
 printBerlinUhr input = mapM_ putStrLn $
                        fromMaybe [input ++ " is not a valid Time!"] $
                        fmap berlinUhrAsString $ parseTime input
+
+-- not strictly required, functions from going from Berlin Uhr to TimeOfDay
+addLightToTime :: TimeOfDay -> Light -> TimeOfDay
+addLightToTime timeOfDay (Light _ time Hours True) = timeOfDay { todHour = (todHour timeOfDay) + time}
+addLightToTime timeOfDay (Light _ time Minutes True) = timeOfDay { todMin = (todMin timeOfDay) + time}
+addLightToTime timeOfDay _ = timeOfDay
+
+addRowToTime :: TimeOfDay -> [Light] -> TimeOfDay
+addRowToTime timeOfDay lights = foldl addLightToTime timeOfDay lights
+
+addUhrToTime :: TimeOfDay -> [[Light]] -> TimeOfDay
+addUhrToTime timeOfDay lightRows = foldl addRowToTime timeOfDay lightRows
