@@ -67,8 +67,11 @@ main = hspec $ do
     it "be the inverse of addUhrToTime (be able to be turned back to the same time)" $ do
       property $ \genTime -> let lights = berlinUhr genTime
                              in addUhrToTime (TimeOfDay 0 0 0) lights == genTime
---    it "should have no more lights turned on after the first off light has been encountered" $ do
---      property $ \genTime -> let lights = berlinUhr genTime
+    it "should have no more lights turned on in a row after the first off light has been encountered" $ do
+      property $ \genTime -> let lights = berlinUhr genTime
+                             in (foldl (\currentVal row -> if (currentVal == OnAfterOff)
+                                                          then OnAfterOff
+                                                          else foldl rowFn On row) On lights) /= OnAfterOff
     
   describe "berlinUhrAsString should" $ do
     it "return [Y,OOOO,OOOO,OOOOOOOOOOO,OOOO] for '00:00:00'" $ do
@@ -77,4 +80,15 @@ main = hspec $ do
       (berlinUhrAsString $ TimeOfDay 13 17 1) `shouldBe` ["O", "RROO", "RRRO", "YYROOOOOOOO", "YYOO"]
     it "return [O,RRRR,RRRO,YYRYYRYYRYY,YYYY] for '23:59:59'" $ do
       (berlinUhrAsString $ TimeOfDay 23 59 59) `shouldBe` ["O","RRRR","RRRO","YYRYYRYYRYY","YYYY"]
+
+data LastLight = On | Off |  OnAfterOff deriving(Eq, Show)
+
+onOrOff :: Light -> LastLight
+onOrOff (Light _ _ _ True) = On
+onOrOff _ = Off
+
+rowFn :: LastLight -> Light -> LastLight
+rowFn Off (Light _ _ _ True) = OnAfterOff
+rowFn _ light = onOrOff light
+
 
