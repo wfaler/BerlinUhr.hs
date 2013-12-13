@@ -68,7 +68,7 @@ berlinUhr timeOfDay = calcUhr timeOfDay unlitBerlinUhr
 -- represents a TimeOfDay as a Berlin Uhr represented as a List of Strings, where each Row is an entry.
 -- Top light for even/odd seconds is a "special case", hence calculated differently
 berlinUhrAsString :: TimeOfDay -> [String]
-berlinUhrAsString tme = let topLight = if (((read (showFixed True (todSec tme)) :: Integer) `rem` 2) == 0)
+berlinUhrAsString tme = let topLight = if (((todSec tme) `mod'` 2) == 0)
                                        then "Y" else "O"
                             restOfTheLights =
                               do
